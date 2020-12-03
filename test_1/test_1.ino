@@ -113,7 +113,7 @@ void goRight()   //run right motor forward, and left motor backward
   digitalWrite(In1, HIGH);
   digitalWrite(In2, LOW);
   // set speed to 150 out 255
-  analogWrite(EnA, 200);w
+  analogWrite(EnA, 200);
   // turn on motor B
   digitalWrite(In3, LOW);
   digitalWrite(In4, HIGH);
@@ -148,26 +148,26 @@ void goReverse()
 void movement_algo()
 {
   // * could increase effciency by adding a state variable for if any change occurs in IR state
-  if(IR_state[0] == true || IR_state[1] == true)
-  {
-    if(IR_state[2] == false || IR_state[3] == false || IR_state[4] == false)
-    {
-      goRight();
-      Serial.println("Right");
-    }
-  }
-  else if(IR_state[3] == true || IR_state[4] == true)
-  {
-    if(IR_state[0] == false || IR_state[1] == false || IR_state[2] == false)
-    {
-      goLeft();
-      Serial.println("Left");
-    }
-  }
-  else
+  if(IR_state[2] == true)
   {
     goStraight();
     Serial.println("Straight");
+  }
+  else if(IR_state[4] == true)
+  {
+    goLeft();
+    Serial.println("Left");
+  }
+  else if(IR_state[0] == true)
+  {
+    goRight();
+    Serial.println("Right");
+  }
+  else
+  {
+    delay(100);
+    goReverse();
+    Serial.println("Reverse");
   }
 }
 
@@ -182,7 +182,7 @@ void loop()
   
   IR_update();
   movement_algo();
+  Serial.println(IR_read(3));
   
   //TD create simulation to see if IR sensor cause required movements
 }
-
