@@ -36,6 +36,9 @@ int IR_L_output[5] = {IR_L_1, IR_L_2, IR_L_3, IR_L_4, IR_L_5}; //Convinient acce
 
 bool IR_state[5] = {true, true, true, true, true};
 bool IR_previous_state[5] = {true, true, true, true, true};
+int revState=false;
+unsigned long revStartTime = 0;
+int revTime = 0;
 
 void setup() 
 {
@@ -152,22 +155,60 @@ void movement_algo()
   {
     goStraight();
     Serial.println("Straight");
+    if(revState == true)
+    {
+      revState = false;
+    }
   }
   else if(IR_state[4] == true)
   {
     goLeft();
     Serial.println("Left");
+    if(revState == true)
+    {
+      revState = false;
+    }    
   }
   else if(IR_state[0] == true)
   {
     goRight();
     Serial.println("Right");
+    if(revState == true)
+    {
+      revState = false;
+    }
   }
   else
   {
-    delay(100);
     goReverse();
     Serial.println("Reverse");
+    if(revState == false)
+      {
+        revState = true;
+        revStartTime = millis();
+        Serial.print("millis() that resets revStartTime");
+        Serial.println(millis());
+        Serial.print("revStartTime reseted");
+        Serial.println(revStartTime);
+      }
+    if(revState == true)
+    {
+      revTime = millis() - revStartTime;
+      Serial.print("millis()");
+      Serial.println(millis());
+      Serial.print("revStartTime");
+      Serial.println(revStartTime);
+      Serial.print("RevTime");
+      Serial.println(revTime);
+      if(revTime > 300)
+      {
+        goStraight();
+        if(revTime>650)
+        {
+          revState == false;
+        }
+      }
+    }
   }
 }
 
@@ -182,7 +223,6 @@ void loop()
   
   IR_update();
   movement_algo();
-  Serial.println(IR_read(3));
   
   //TD create simulation to see if IR sensor cause required movements
 }
