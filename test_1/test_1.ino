@@ -70,7 +70,7 @@ void IR_update()
 {
   //if any IR sensor is on, update its state
   for(int i=0; i<5; i++)
-  if(IR_read(i) > 0.5)
+  if(IR_read(i) > 0.6)
   {
     IR_state[i] = true;
   }
