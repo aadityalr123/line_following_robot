@@ -1,22 +1,22 @@
 /******************************************************************************
-QRD1114_Proximity_Example.ino
-Example sketch for SparkFun's QRD1114 Reflectance Proximity Sensor
+  QRD1114_Proximity_Example.ino
+  Example sketch for SparkFun's QRD1114 Reflectance Proximity Sensor
   (https://www.sparkfun.com/products/246)
-Jim Lindblom @ SparkFun Electronics
-May 2, 2016
+  Jim Lindblom @ SparkFun Electronics
+  May 2, 2016
 
-Connect a QRD1114, 330 resistor and 10k resistor as follows:
+  Connect a QRD1114, 330 resistor and 10k resistor as follows:
 
-QRD1114 Pin ---- Arduino ---- Resistors
+  QRD1114 Pin ---- Arduino ---- Resistors
     1              A0      10k Pull-up to 5V
     2              GND
     3                      330 Resistor to 5V
     4              GND
 
-As an object comes closer to the QRD1114, the voltage on A0 should go down.
+  As an object comes closer to the QRD1114, the voltage on A0 should go down.
 
-Development environment specifics:
-Arduino 1.6.7
+  Development environment specifics:
+  Arduino 1.6.7
 ******************************************************************************/
 const int IR_L_1 = A0; // Sensor output voltage
 const int IR_L_2 = A1; // Sensor output voltage
@@ -37,7 +37,12 @@ int IR_L_output[5] = {IR_L_1, IR_L_2, IR_L_3, IR_L_4, IR_L_5}; //Convinient acce
 bool IR_state[5] = {true, true, true, true, true};
 bool IR_previous_state[5] = {true, true, true, true, true};
 
-void setup() 
+bool alternator = false; //Variable for checking left and right alternate state when needed. true = move right; false = move left;
+
+int movementState = 1; //State of previous movement; 0 is straight; 1 is reverse; 2 is left; 3 is right;
+bool oppositeDirectionOnChecker = false;
+
+void setup()
 {
   Serial.begin(9600);
   pinMode(IR_L_1, INPUT);
@@ -45,7 +50,7 @@ void setup()
   pinMode(IR_L_3, INPUT);
   pinMode(IR_L_4, INPUT);
   pinMode(IR_L_5, INPUT);
-  
+
   // All motor control pins are outputs
   pinMode(EnA, OUTPUT);
   pinMode(EnB, OUTPUT);
@@ -53,31 +58,31 @@ void setup()
   pinMode(In2, OUTPUT);
   pinMode(In3, OUTPUT);
   pinMode(In4, OUTPUT);
-  
+
 }
 
-float IR_read(int IR_number)
+float IR_read(int IR_number) // Reads IR sensor in analog and returns after scaling the reading to 0-5V range
 {
   //read appropriate analog val
   int IR_analog = analogRead(IR_L_output[IR_number]);
   //convert to digital
   float IR_V = (float)IR_analog * 5.0 / 1023.0;
   //return digital reading
-  return(IR_V);
+  return (IR_V);
 }
 
 void IR_update()
 {
   //if any IR sensor is on, update its state
-  for(int i=0; i<5; i++)
-  if(IR_read(i) > 0.6)
-  {
-    IR_state[i] = true;
-  }
-  else
-  {
-    IR_state[i] = false;
-  }
+  for (int i = 0; i < 5; i++)
+    if (IR_read(i) > 0.5)
+    {
+      IR_state[i] = true;
+    }
+    else
+    {
+      IR_state[i] = false;
+    }
 }
 
 void goStraight()   //run both motors in the same direction
@@ -92,19 +97,18 @@ void goStraight()   //run both motors in the same direction
   digitalWrite(In4, LOW);
   // set speed to 150 out 255
   analogWrite(EnB, 200);
+  movementState = 0;
+  Serial.println("Straight");
 }
 
 void offMotor()
 {
   // now turn off motors
   digitalWrite(In1, LOW);
-  Serial.print("In1: OFF");
-  digitalWrite(In2, LOW);  
-  Serial.print("In2: OFF");
+  digitalWrite(In2, LOW);
   digitalWrite(In3, LOW);
-  Serial.print("In3: OFF");
   digitalWrite(In4, LOW);
-  Serial.print("In4: OFF\n");
+  Serial.println("OFF motor");
 }
 
 void goRight()   //run right motor forward, and left motor backward
@@ -119,6 +123,8 @@ void goRight()   //run right motor forward, and left motor backward
   digitalWrite(In4, HIGH);
   // set speed to 150 out 255
   analogWrite(EnB, 200);
+  movementState = 3;
+  Serial.println("Right");
 }
 
 void goLeft()   //run right motor forward, and left motor backward
@@ -133,6 +139,8 @@ void goLeft()   //run right motor forward, and left motor backward
   digitalWrite(In4, LOW);
   // set speed to 150 out 255
   analogWrite(EnB, 200);
+  movementState = 2;
+  Serial.println("Left");
 }
 
 void goReverse()
@@ -143,46 +151,103 @@ void goReverse()
   //Turn on Motor B reverse
   digitalWrite(In3, LOW);
   digitalWrite(In4, HIGH);
+  movementState = 1;
+  Serial.println("Reverse");
 }
 
 void movement_algo()
 {
   // * could increase effciency by adding a state variable for if any change occurs in IR state
-  if(IR_state[2] == true)
+  if (IR_state[2] == true) //if middle sensor is on
   {
-    goStraight();
-    Serial.println("Straight");
-  }
-  else if(IR_state[4] == true)
-  {
-    goLeft();
-    Serial.println("Left");
-  }
-  else if(IR_state[0] == true)
-  {
-    goRight();
-    Serial.println("Right");
+    oppositeDirectionOnChecker = 0;
+    if (IR_state[0] == true && IR_state[4] == true)
+    {
+      goStraight();
+    }
+    if (IR_state[0] == false && IR_state[4] == true)
+    {
+      goRight();
+    }
+    if (IR_state[0] == true && IR_state[4] == false)
+    {
+      goLeft();
+    }
+    if (IR_state[0] == false && IR_state[4] == false)
+    {
+      goStraight();
+    }
   }
   else
   {
-    delay(100);
-    goReverse();
-    Serial.println("Reverse");
+    if (IR_state[0] == true && IR_state[4] == true)
+    {
+      offMotor();
+      oppositeDirectionOnChecker == 0;
+    }
+    else if (IR_state[0] == false && IR_state[4] == true)
+    {
+      goRight();
+      oppositeDirectionOnChecker == 0;
+    }
+    else if (IR_state[0] == true && IR_state[4] == false)
+    {
+      goLeft();
+      oppositeDirectionOnChecker == 0;
+    }
+    else if (IR_state[0] == false && IR_state[4] == false)
+    {
+      if(IR_state[1] == true)
+      {
+        goLeft();
+      }
+      else if(IR_state[3] == true)
+      {
+        goRight();
+      }
+      else
+      {
+          goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
+      }
+    }
   }
 }
 
+void goOppositeDirection()
+  {
+    if(oppositeDirectionOnChecker == 0)
+    {
+      if(movementState == 0)
+      {
+        goReverse();
+      }
+      else if(movementState == 1)
+      {
+        goStraight();
+      }
+      else if(movementState == 2)
+      {
+        goRight();
+      }
+      else if(movementState == 3)
+      {
+        goLeft();
+      }
+      oppositeDirectionOnChecker == 1;
+    }
+  }
 
-void loop() 
+void loop()
 {
-  for(int i=0; i<5; i++)
+  for (int i = 0; i < 5; i++)
   {
     Serial.print(IR_state[i]);
   }
   Serial.println();
-  
+
   IR_update();
   movement_algo();
-  Serial.println(IR_read(3));
-  
+
+  Serial.println();
   //TD create simulation to see if IR sensor cause required movements
 }
