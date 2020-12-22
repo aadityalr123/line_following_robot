@@ -201,17 +201,21 @@ void movement_algo()
     }
     else if (IR_state[0] == false && IR_state[4] == false)
     {
-      if(IR_state[1] == true)
+      if(IR_state[1] == true && IR_state[3] == true)
+      {
+        goReverse();
+      }
+      else if(IR_state[1] == true && IR_state[3] == false)
       {
         goLeft();
       }
-      else if(IR_state[3] == true)
+      else if(IR_state[1] == false && IR_state[3] == true)
       {
         goRight();
       }
       else
       {
-        goStraight();
+        whiteLineAlgorithm();
           //goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
       }
     }
@@ -241,6 +245,36 @@ void goOppositeDirection()
       oppositeDirectionOnChecker == 1;
     }
   }
+
+void whiteLineAlgorithm()
+{
+  while(IR_state[0] == false || IR_state[4] == false)
+  {
+    IR_update();
+    goReverse();
+  }
+  offMotor();
+  if(IR_state[0] == true)
+  {
+    while(IR_state[2] == false)
+    {
+      IR_update();
+      goRight();
+    }
+  }
+  else if(IR_state[4] = true)
+  {
+    while(IR_state[2] == false)
+    {
+      IR_update();
+      goLeft();
+    }
+  }
+  else
+  {
+    offMotor();
+  }
+}
 
 void loop()
 {
