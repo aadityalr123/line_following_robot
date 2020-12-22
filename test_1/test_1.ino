@@ -18,6 +18,8 @@
   Development environment specifics:
   Arduino 1.6.7
 ******************************************************************************/
+const int IR_sensitivity = 1; //White detected below this value, black detected above thi value
+
 const int IR_L_1 = A0; // Sensor output voltage
 const int IR_L_2 = A1; // Sensor output voltage
 const int IR_L_3 = A2; // Sensor output voltage
@@ -165,41 +167,41 @@ void movement_algo()
   if (IR_state[2] == true) //if middle sensor is on
   {
     oppositeDirectionOnChecker = 0;
-    if (IR_state[0] == true && IR_state[4] == true)
+    if (IR_state[1] == true && IR_state[3] == true)
     {
       goStraight();
     }
-    if (IR_state[0] == false && IR_state[4] == true)
+    if (IR_state[1] == false && IR_state[3] == true)
     {
       goRight();
     }
-    if (IR_state[0] == true && IR_state[4] == false)
+    if (IR_state[1] == true && IR_state[3] == false)
     {
       goLeft();
     }
-    if (IR_state[0] == false && IR_state[4] == false)
+    if (IR_state[1] == false && IR_state[3] == false)
     {
       goStraight();
     }
   }
   else
   {
-    if (IR_state[0] == true && IR_state[4] == true)
+    if (IR_state[1] == true && IR_state[3] == true)
     {
       offMotor();
       oppositeDirectionOnChecker = 0;
     }
-    else if (IR_state[0] == false && IR_state[4] == true)
+    else if (IR_state[1] == false && IR_state[3] == true)
     {
       goRight();
       oppositeDirectionOnChecker = 0;
     }
-    else if (IR_state[0] == true && IR_state[4] == false)
+    else if (IR_state[1] == true && IR_state[3] == false)
     {
       goLeft();
       oppositeDirectionOnChecker = 0;
     }
-    else if (IR_state[0] == false && IR_state[4] == false)
+    else if (IR_state[1] == false && IR_state[3] == false)
     {
       if(IR_state[1] == true && IR_state[3] == true)
       {
@@ -250,7 +252,6 @@ void whiteLineAlgorithm()
 {
   while(IR_state[0] == false || IR_state[4] == false)
   {
-    IR_update();
     goReverse();
   }
   offMotor();
