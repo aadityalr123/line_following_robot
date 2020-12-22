@@ -215,7 +215,7 @@ void movement_algo()
       }
       else
       {
-        goReverse();
+        goStraight();
           //goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
       }
     }
