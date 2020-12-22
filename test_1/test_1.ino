@@ -18,7 +18,9 @@
   Development environment specifics:
   Arduino 1.6.7
 ******************************************************************************/
-const int IR_sensitivity = 1; //White detected below this value, black detected above thi value
+#define IR_sensitivity 1 //White detected below this value, black detected above thi value
+
+int bigTurnDirection = 2; //Specifies direction to turn if middle sensors cannot be used. 0 - go_straight; 1 - turns right; 2 - turns left;
 
 const int IR_L_1 = A0; // Sensor output voltage
 const int IR_L_2 = A1; // Sensor output voltage
@@ -77,7 +79,7 @@ void IR_update()
 {
   //if any IR sensor is on, update its state
   for (int i = 0; i < 5; i++)
-    if (IR_read(i) > 0.5)
+    if (IR_read(i) > IR_sensitivity)
     {
       IR_state[i] = true;
     }
@@ -190,6 +192,7 @@ void movement_algo()
     {
       offMotor();
       oppositeDirectionOnChecker = 0;
+      Serial.println("Center off, sides on");
     }
     else if (IR_state[1] == false && IR_state[3] == true)
     {
@@ -203,26 +206,41 @@ void movement_algo()
     }
     else if (IR_state[1] == false && IR_state[3] == false)
     {
-      if(IR_state[1] == true && IR_state[3] == true)
-      {
-        goReverse();
-      }
-      else if(IR_state[1] == true && IR_state[3] == false)
-      {
-        goLeft();
-      }
-      else if(IR_state[1] == false && IR_state[3] == true)
-      {
-        goRight();
-      }
-      else
-      {
-        whiteLineAlgorithm();
-          //goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
-      }
+      //Check last +ve state of farmost sensor
+      //turn in that directon till front sensor is in line
+      offMotor();
+      Serial.println("All middle sensors off");
     }
   }
 }
+
+void edgeSensorChecker() //saves instruction for the preffered direction to move in, incase of not being able to use the middle sensors
+  {
+    if(IR_state[0] == true || IR_state[4] == true)
+    {
+      if(IR_state[0]== true && IR_state[4] == false)
+      {
+        bigTurnDirection = 2;
+        Serial.println("Big turn direction - Left");
+      }
+      else if(IR_state[0] == false && IR_state[4] == true)
+      {
+        bigTurnDirection = 1;
+        Serial.println("Big turn direction - Right");
+      }
+      else if(IR_state[0] == true && IR_state[4] == true)
+      {
+        bigTurnDirection = 0;    
+        Serial.println("Big turn direction - Straight");
+      }
+    }
+    else
+    {
+      Serial.print(" Big turn direction - No change. Direction - ");
+      Serial.println(bigTurnDirection);
+      
+    }
+  }
 
 void goOppositeDirection()
   {
@@ -286,6 +304,7 @@ void loop()
   Serial.println();
 
   IR_update();
+  edgeSensorChecker();
   movement_algo();
 
   Serial.println();
