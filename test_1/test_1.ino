@@ -99,10 +99,12 @@ void goStraight()   //run both motors in the same direction
   analogWrite(EnB, 200);
   movementState = 0;
   Serial.println("Straight");
+  offMotor();
 }
 
 void offMotor()
 {
+  delay(5);
   // now turn off motors
   digitalWrite(In1, LOW);
   digitalWrite(In2, LOW);
@@ -125,6 +127,7 @@ void goRight()   //run right motor forward, and left motor backward
   analogWrite(EnB, 200);
   movementState = 3;
   Serial.println("Right");
+  offMotor();
 }
 
 void goLeft()   //run right motor forward, and left motor backward
@@ -141,6 +144,7 @@ void goLeft()   //run right motor forward, and left motor backward
   analogWrite(EnB, 200);
   movementState = 2;
   Serial.println("Left");
+  offMotor();
 }
 
 void goReverse()
@@ -153,11 +157,15 @@ void goReverse()
   digitalWrite(In4, HIGH);
   movementState = 1;
   Serial.println("Reverse");
+  offMotor();
 }
 
 void movement_algo()
 {
   // * could increase effciency by adding a state variable for if any change occurs in IR state
+  // Other algo could work perhaps using just one sensor to move along the line and switching to whichever side seems more convinient
+  // maybe try seperate rotate and turn variables
+  // You could create completely seperate loop for separate states
   if (IR_state[2] == true) //if middle sensor is on
   {
     oppositeDirectionOnChecker = 0;
@@ -183,17 +191,17 @@ void movement_algo()
     if (IR_state[0] == true && IR_state[4] == true)
     {
       offMotor();
-      oppositeDirectionOnChecker == 0;
+      oppositeDirectionOnChecker = 0;
     }
     else if (IR_state[0] == false && IR_state[4] == true)
     {
       goRight();
-      oppositeDirectionOnChecker == 0;
+      oppositeDirectionOnChecker = 0;
     }
     else if (IR_state[0] == true && IR_state[4] == false)
     {
       goLeft();
-      oppositeDirectionOnChecker == 0;
+      oppositeDirectionOnChecker = 0;
     }
     else if (IR_state[0] == false && IR_state[4] == false)
     {
@@ -207,7 +215,8 @@ void movement_algo()
       }
       else
       {
-          goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
+        goReverse();
+          //goOppositeDirection(); //move in the direction opp, to previous movement. Must only act once, until the bot moves out of this state.
       }
     }
   }
