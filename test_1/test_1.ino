@@ -99,7 +99,6 @@ void goStraight()   //run both motors in the same direction
   analogWrite(EnB, 200);
   movementState = 0;
   Serial.println("Straight");
-  offMotor();
 }
 
 void offMotor()
@@ -113,7 +112,7 @@ void offMotor()
   Serial.println("OFF motor");
 }
 
-void goRight()   //run right motor forward, and left motor backward
+void goLeft()   //run right motor forward, and left motor backward
 {
   // turn on motor A
   digitalWrite(In1, HIGH);
@@ -126,11 +125,10 @@ void goRight()   //run right motor forward, and left motor backward
   // set speed to 150 out 255
   analogWrite(EnB, 200);
   movementState = 3;
-  Serial.println("Right");
-  offMotor();
+  Serial.println("Left");
 }
 
-void goLeft()   //run right motor forward, and left motor backward
+void goRight()   //run right motor forward, and left motor backward
 {
   // turn on motor A
   digitalWrite(In1, LOW);
@@ -143,8 +141,7 @@ void goLeft()   //run right motor forward, and left motor backward
   // set speed to 150 out 255
   analogWrite(EnB, 200);
   movementState = 2;
-  Serial.println("Left");
-  offMotor();
+  Serial.println("Right");
 }
 
 void goReverse()
@@ -157,7 +154,6 @@ void goReverse()
   digitalWrite(In4, HIGH);
   movementState = 1;
   Serial.println("Reverse");
-  offMotor();
 }
 
 void movement_algo()
