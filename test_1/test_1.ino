@@ -1,29 +1,11 @@
-/******************************************************************************
-  QRD1114_Proximity_Example.ino
-  Example sketch for SparkFun's QRD1114 Reflectance Proximity Sensor
-  (https://www.sparkfun.com/products/246)
-  Jim Lindblom @ SparkFun Electronics
-  May 2, 2016
+/*
+By: Aaditya Rajesh
+Description: Program to complete level 4 of the line following robot(aswell as previos levels)
+*/
 
-  Connect a QRD1114, 330 resistor and 10k resistor as follows:
-
-  QRD1114 Pin ---- Arduino ---- Resistors
-    1              A0      10k Pull-up to 5V
-    2              GND
-    3                      330 Resistor to 5V
-    4              GND
-
-  As an object comes closer to the QRD1114, the voltage on A0 should go down.
-
-  Development environment specifics:
-  Arduino 1.6.7
-******************************************************************************/
 #define IR_sensitivity 2 //White detected below this value, black detected above thi value
 
 int bigTurnDirection = 2; //Specifies direction to turn if middle sensors cannot be used. 0 - go_straight; 1 - turns right; 2 - turns left;
-
-//delay long enought blackline re-detect the b
-#define shortDelay 75
 
 #define motorSpeedFast 250
 #define motorSpeedSlow 200
@@ -140,7 +122,7 @@ void goLeft()   //run right motor forward, and left motor backward
 }
 
 
-void goLeftNoRotation()   //run right motor forward, and left motor backward
+void goLeftNoRotation()   //run right motor forward but not the left
 {
   // turn on motor A
   digitalWrite(In1, HIGH);
@@ -156,7 +138,7 @@ void goLeftNoRotation()   //run right motor forward, and left motor backward
   Serial.println("Left - No rotation");
 }
 
-void goRight()   //run right motor forward, and left motor backward
+void goRight()   //run left motor forward, and right motor backward
 {
   // turn on motor A
   digitalWrite(In1, LOW);
@@ -172,7 +154,7 @@ void goRight()   //run right motor forward, and left motor backward
   Serial.println("Right");
 }
 
-void goRightNoRotation()   //run right motor forward, and left motor backward
+void goRightNoRotation()   //run left motor forward but not the right
 {
   // turn on motor A
   digitalWrite(In1, LOW);
@@ -200,60 +182,7 @@ void goReverse()
   Serial.println("Reverse");
 }
 
-void goOppositeDirection()
-  {
-    if(oppositeDirectionOnChecker == 0)
-    {
-      if(movementState == 0)
-      {
-        goReverse();
-      }
-      else if(movementState == 1)
-      {
-        goStraight();
-      }
-      else if(movementState == 2)
-      {
-        goRight();
-      }
-      else if(movementState == 3)
-      {
-        goLeft();
-      }
-      oppositeDirectionOnChecker == 1;
-    }
-  }
-
-void whiteLineAlgorithm()
-{
-  while(IR_state[0] == false || IR_state[4] == false)
-  {
-    goReverse();
-  }
-  offMotor();
-  if(IR_state[0] == true)
-  {
-    while(IR_state[2] == false)
-    {
-      IR_update();
-      goRight();
-    }
-  }
-  else if(IR_state[4] = true)
-  {
-    while(IR_state[2] == false)
-    {
-      IR_update();
-      goLeft();
-    }
-  }
-  else
-  {
-    offMotor();
-  }
-}
-
-void bigTurn()
+void bigTurn() //Alligns the bot back to the line in a chosen direction(depends on bigTurnDirection)
 {
   
   if(bigTurnDirection == 0)
@@ -456,5 +385,4 @@ void loop()
   movement_algo();
 
   Serial.println();
-  //TD create simulation to see if IR sensor cause required movements
 }
