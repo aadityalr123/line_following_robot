@@ -1,72 +1,44 @@
-
-
-/******************************************************************************
-QRD1114_Proximity_Example.ino
-Example sketch for SparkFun's QRD1114 Reflectance Proximity Sensor
-  (https://www.sparkfun.com/products/246)
-Jim Lindblom @ SparkFun Electronics
-May 2, 2016
-
-Connect a QRD1114, 330 resistor and 10k resistor as follows:
-
-QRD1114 Pin ---- Arduino ---- Resistors
-    1              A0      10k Pull-up to 5V
-    2              GND
-    3                      330 Resistor to 5V
-    4              GND
-
-As an object comes closer to the QRD1114, the voltage on A0 should go down.
-
-Development environment specifics:
-Arduino 1.6.7
-******************************************************************************/
-const int IR_L_1 = A0; // Sensor output voltage
-const int IR_L_2 = A1; // Sensor output voltage
-const int IR_L_3 = A2; // Sensor output voltage
-const int IR_L_4 = A3; // Sensor output voltage
-const int IR_L_5 = A4; // Sensor output voltage
-
-void setup() 
+//Motor Connections
+//Change this if you wish to use another diagram
+#define EnA 10
+#define EnB 5
+#define In1 9
+#define In2 8
+#define In3 7
+#define In4 6
+ 
+ 
+void setup()
 {
-  Serial.begin(9600);
-  pinMode(IR_L_1, INPUT);
-  
-  pinMode(IR_L_2, INPUT);
-  
-  pinMode(IR_L_3, INPUT);
-  
-  pinMode(IR_L_4, INPUT);
-  
-  pinMode(IR_L_5, INPUT);
+  // All motor control pins are outputs
+  pinMode(EnA, OUTPUT);
+  pinMode(EnB, OUTPUT);
+  pinMode(In1, OUTPUT);
+  pinMode(In2, OUTPUT);
+  pinMode(In3, OUTPUT);
+  pinMode(In4, OUTPUT);
 }
-
-void loop() 
+void goStraight()   //run both motors in the same direction
 {
-  // Read in the ADC and convert it to a voltage:
-  int analog_IR_L_1 = analogRead(IR_L_1);
-  float V_IR_L_1 = (float)analog_IR_L_1 * 5.0 / 1023.0;
-  Serial.println(V_IR_L_1);
-  
-    // Read in the ADC and convert it to a voltage:
-  int analog_IR_L_2 = analogRead(IR_L_2);
-  float V_IR_L_2 = (float)analog_IR_L_2 * 5.0 / 1023.0;
-  Serial.println(V_IR_L_2);
-  
-  int analog_IR_L_3 = analogRead(IR_L_3);
-  float V_IR_L_3 = (float)analog_IR_L_3 * 5.0 / 1023.0;
-  Serial.println(V_IR_L_3);
-  
-  int analog_IR_L_4 = analogRead(IR_L_4);
-  float V_IR_L_4 = (float)analog_IR_L_4 * 5.0 / 1023.0;
-  Serial.println(V_IR_L_4);
-  
-  int analog_IR_L_5 = analogRead(IR_L_5);
-  float V_IR_L_5 = (float)analog_IR_L_5 * 5.0 / 1023.0;
-  Serial.println(V_IR_L_5);
-  
-  Serial.println();  
-  
-  delay(100);
+  // turn on motor A
+  digitalWrite(In1, HIGH);
+  digitalWrite(In2, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnA, 250);
+  // turn on motor B
+  digitalWrite(In3, HIGH);
+  digitalWrite(In4, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnB, 100);
+  delay(2000);
+  // now turn off motors
+  digitalWrite(In1, LOW);
+  digitalWrite(In2, LOW);  
+  digitalWrite(In3, LOW);
+  digitalWrite(In4, LOW);
 }
-
-
+void loop()
+{
+  goStraight();
+  delay(1000);
+}

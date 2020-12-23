@@ -22,6 +22,9 @@
 
 int bigTurnDirection = 2; //Specifies direction to turn if middle sensors cannot be used. 0 - go_straight; 1 - turns right; 2 - turns left;
 
+#define motorSpeedFast 250
+#define motorSpeedSlow 200
+
 const int IR_L_1 = A0; // Sensor output voltage
 const int IR_L_2 = A1; // Sensor output voltage
 const int IR_L_3 = A2; // Sensor output voltage
@@ -29,9 +32,9 @@ const int IR_L_4 = A3; // Sensor output voltage
 const int IR_L_5 = A4; // Sensor output voltage
 int IR_L_output[5] = {IR_L_1, IR_L_2, IR_L_3, IR_L_4, IR_L_5}; //Convinient access to output pins
 
-//Motor variables
-#define EnA 10
-#define EnB 5
+//Motor pin variables
+#define EnA 5
+#define EnB 10
 #define In1 8
 #define In2 9
 #define In3 6
@@ -95,12 +98,12 @@ void goStraight()   //run both motors in the same direction
   digitalWrite(In1, HIGH);
   digitalWrite(In2, LOW);
   // set speed to 150 out 255
-  analogWrite(EnA, 200);
+  analogWrite(EnA, motorSpeedFast);
   // turn on motor B
   digitalWrite(In3, HIGH);
   digitalWrite(In4, LOW);
   // set speed to 150 out 255
-  analogWrite(EnB, 200);
+  analogWrite(EnB, motorSpeedFast);
   movementState = 0;
   Serial.println("Straight");
 }
@@ -122,14 +125,31 @@ void goLeft()   //run right motor forward, and left motor backward
   digitalWrite(In1, HIGH);
   digitalWrite(In2, LOW);
   // set speed to 150 out 255
-  analogWrite(EnA, 200);
+  analogWrite(EnA, motorSpeedFast);
   // turn on motor B
   digitalWrite(In3, LOW);
   digitalWrite(In4, HIGH);
   // set speed to 150 out 255
-  analogWrite(EnB, 200);
+  analogWrite(EnB, motorSpeedSlow);
   movementState = 3;
   Serial.println("Left");
+}
+
+
+void goLeftNoRotation()   //run right motor forward, and left motor backward
+{
+  // turn on motor A
+  digitalWrite(In1, HIGH);
+  digitalWrite(In2, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnA, motorSpeedFast);
+  // turn on motor B
+  digitalWrite(In3, LOW);
+  digitalWrite(In4, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnB, motorSpeedSlow);
+  movementState = 3;
+  Serial.println("Left - No rotation");
 }
 
 void goRight()   //run right motor forward, and left motor backward
@@ -138,14 +158,30 @@ void goRight()   //run right motor forward, and left motor backward
   digitalWrite(In1, LOW);
   digitalWrite(In2, HIGH);
   // set speed to 150 out 255
-  analogWrite(EnA, 200);
+  analogWrite(EnA, motorSpeedSlow);
   // turn on motor B
   digitalWrite(In3, HIGH);
   digitalWrite(In4, LOW);
   // set speed to 150 out 255
-  analogWrite(EnB, 200);
+  analogWrite(EnB, motorSpeedFast);
   movementState = 2;
   Serial.println("Right");
+}
+
+void goRightNoRotation()   //run right motor forward, and left motor backward
+{
+  // turn on motor A
+  digitalWrite(In1, LOW);
+  digitalWrite(In2, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnA, motorSpeedSlow);
+  // turn on motor B
+  digitalWrite(In3, HIGH);
+  digitalWrite(In4, LOW);
+  // set speed to 150 out 255
+  analogWrite(EnB, motorSpeedFast);
+  movementState = 2;
+  Serial.println("Right - No rotation");
 }
 
 void goReverse()
@@ -159,88 +195,6 @@ void goReverse()
   movementState = 1;
   Serial.println("Reverse");
 }
-
-void movement_algo()
-{
-  // * could increase effciency by adding a state variable for if any change occurs in IR state
-  // Other algo could work perhaps using just one sensor to move along the line and switching to whichever side seems more convinient
-  // maybe try seperate rotate and turn variables
-  // You could create completely seperate loop for separate states
-  if (IR_state[2] == true) //if middle sensor is on
-  {
-    oppositeDirectionOnChecker = 0;
-    if (IR_state[1] == true && IR_state[3] == true)
-    {
-      goStraight();
-    }
-    if (IR_state[1] == false && IR_state[3] == true)
-    {
-      goRight();
-    }
-    if (IR_state[1] == true && IR_state[3] == false)
-    {
-      goLeft();
-    }
-    if (IR_state[1] == false && IR_state[3] == false)
-    {
-      goStraight();
-    }
-  }
-  else
-  {
-    if (IR_state[1] == true && IR_state[3] == true)
-    {
-      offMotor();
-      oppositeDirectionOnChecker = 0;
-      Serial.println("Center off, sides on");
-    }
-    else if (IR_state[1] == false && IR_state[3] == true)
-    {
-      goRight();
-      oppositeDirectionOnChecker = 0;
-    }
-    else if (IR_state[1] == true && IR_state[3] == false)
-    {
-      goLeft();
-      oppositeDirectionOnChecker = 0;
-    }
-    else if (IR_state[1] == false && IR_state[3] == false)
-    {
-      //Check last +ve state of farmost sensor
-      //turn in that directon till front sensor is in line
-      offMotor();
-      Serial.println("All middle sensors off");
-    }
-  }
-}
-
-void edgeSensorChecker() //saves instruction for the preffered direction to move in, incase of not being able to use the middle sensors
-  {
-    if(IR_state[0] == true || IR_state[4] == true)
-    {
-      if(IR_state[0]== true && IR_state[4] == false)
-      {
-        bigTurnDirection = 2;
-        Serial.println("Big turn direction - Left");
-      }
-      else if(IR_state[0] == false && IR_state[4] == true)
-      {
-        bigTurnDirection = 1;
-        Serial.println("Big turn direction - Right");
-      }
-      else if(IR_state[0] == true && IR_state[4] == true)
-      {
-        bigTurnDirection = 0;    
-        Serial.println("Big turn direction - Straight");
-      }
-    }
-    else
-    {
-      Serial.print(" Big turn direction - No change. Direction - ");
-      Serial.println(bigTurnDirection);
-      
-    }
-  }
 
 void goOppositeDirection()
   {
@@ -292,6 +246,163 @@ void whiteLineAlgorithm()
   else
   {
     offMotor();
+  }
+}
+
+void bigTurn()
+{
+  if(bigTurnDirection == 0)
+  {        
+    goStraight();
+    IR_update();
+  }
+  if(bigTurnDirection == 1)
+  {
+    while(IR_state[2] != true)
+    {
+      goRight();
+      IR_update();
+      for (int i = 0; i < 5; i++)
+      {
+        Serial.print(IR_state[i]);
+      }
+      Serial.println();    
+    }
+    while(IR_state[1] != 0)
+    {
+      goStraight();
+      IR_update();
+      for (int i = 0; i < 5; i++)
+      {
+        Serial.print(IR_state[i]);
+      }
+    }
+  }
+  if(bigTurnDirection == 2)
+  {
+    while(IR_state[2] != true)
+    {
+      goLeft();
+      IR_update();
+      for (int i = 0; i < 5; i++)
+      {
+        Serial.print(IR_state[i]);
+      }
+      Serial.println();      
+    }
+    while(IR_state[3] != 0)
+    {
+      goStraight();
+      IR_update();
+      for (int i = 0; i < 5; i++)
+      {
+        Serial.print(IR_state[i]);
+      }
+    }  
+  }  
+}
+void edgeSensorChecker() //saves instruction for the preffered direction to move in, incase of not being able to use the middle sensors. 0 goes straight; 1 go right; 2 go left;
+  {
+    if(IR_state[0] == true || IR_state[4] == true)
+    {
+      if(IR_state[0]== true && IR_state[4] == false)
+      {
+        bigTurnDirection = 2;
+        Serial.println("Big turn direction - Left");
+      }
+      else if(IR_state[0] == false && IR_state[4] == true)
+      {
+        bigTurnDirection = 1;
+        Serial.println("Big turn direction - Right");
+      }
+      else if(IR_state[0] == true && IR_state[4] == true)
+      {
+        bigTurnDirection = 0;    
+        Serial.println("Big turn direction - Straight");
+      }
+    }
+    else
+    {
+      Serial.print(" Big turn direction - No change. Direction - ");
+      Serial.println(bigTurnDirection);
+    }
+  }
+
+void movement_algo()
+{
+  // * could increase effciency by adding a state variable for if any change occurs in IR state
+  // Other algo could work perhaps using just one sensor to move along the line and switching to whichever side seems more convinient
+  // maybe try seperate rotate and turn variables
+  // You could create completely seperate loop for separate states
+  if (IR_state[2] == true) //if middle sensor is on
+  {
+    oppositeDirectionOnChecker = 0;
+    if (IR_state[1] == true && IR_state[3] == true)
+    {
+      goStraight();
+    }
+    if (IR_state[1] == false && IR_state[3] == true)
+    {
+      goRight();
+    }
+    if (IR_state[1] == true && IR_state[3] == false)
+    {
+      goLeft();
+    }
+    if (IR_state[1] == false && IR_state[3] == false)
+    {
+      goStraight();
+    }
+  }
+  else
+  {
+    if (IR_state[1] == true && IR_state[3] == true)
+    {
+      goStraight();
+    }
+    else if (IR_state[1] == false && IR_state[3] == true)
+    {
+      goRight();
+    }
+    else if (IR_state[1] == true && IR_state[3] == false)
+    {
+      goLeft();
+    }
+    /*if(bigTurnDirection == 0)
+    {
+      goStraight();
+      IR_update();
+    }
+    if(bigTurnDirection == 1)
+    {
+      while(IR_state[1] != true)
+      {
+        goRight();
+        IR_update();
+        for (int i = 0; i < 5; i++)
+        {
+          Serial.print(IR_state[i]);
+        }
+        Serial.println();       
+      }
+    }
+    if(bigTurnDirection == 2)
+    {
+      while(IR_state[3] != true)
+      {
+        goLeft();
+        IR_update();
+        for (int i = 0; i < 5; i++)
+        {
+          Serial.print(IR_state[i]);
+        }
+        Serial.println();  
+      }
+    }*/
+    else 
+    {
+      bigTurn(); 
+    }
   }
 }
 
