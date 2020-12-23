@@ -371,24 +371,85 @@ void movement_algo()
         }
         time_current = millis()- start_time;
       }
+      
+      start_time = millis();
+      time_current = 0;
+      goReverse();
+            while(time_current <= 150)
+      {
+        IR_update();
+        if(IR_state[1] == true || IR_state[2] == true || IR_state[3] == true)
+        {
+          break;
+        }
+        time_current = millis()- start_time;
+      }
       if(IR_state[1] == false && IR_state[2] == false && IR_state[3] == false)
         {
-          bigTurn(); 
+          scanSurroundings();
+          bigTurn(); //to handle accute angles when necessary
         }
     }
   }
 }
 
-/*void checkWhiteLineTime()//returns true if the system detects a white line for more than a specified time, else false
+void scanSurroundings() //Returns directions available. Moves to the right and then to the left by short, fixed ammounts to detect lines on the right and on the left to make more accurate local decisions to avoid unnecessary big turns.
 {
-  if(IR_state[0] == false && IR_state[1] == false && IR_state[2] == false && IR_state[3] == false && IR_state[4] == false)
-  {
-    if(whiteLineTimeChecker == 0)
+  bool rightOn = false;
+  bool leftOn = false;
+  //spin right, detect right
+  unsigned long start_time = millis();
+  int time_current = 0;
+  while(time_current <= 600)
     {
-      whiteLineTimeStart = millis();
+      goRight();
+      IR_update();
+      //record right
+      if(IR_state[3] == true)
+      {
+        rightOn = true;
+        break;
+      }
+      time_current = millis()- start_time;
     }
+    offMotor();
+  //spin left, detect left
+  start_time = millis();
+  time_current = 0;
+  while(time_current <= 550)//Left motor rotates quite a bit more that the right on
+  {
+    goLeft();
+    IR_update();
+    //record left
+    if(IR_state[1] == true)
+    {
+      leftOn = true;
+      break;
+    }
+    time_current = millis()- start_time;
   }
-}*/
+  start_time = millis();
+  time_current = 0;
+  while(time_current <= 300)
+  {
+    goRight();
+    time_current = millis()- start_time;
+  }
+  offMotor();
+  if(leftOn == true && rightOn == false)
+  {
+    bigTurnDirection = 2;
+  }
+  if(leftOn == false && rightOn == true)
+  {
+    bigTurnDirection = 1;
+  }
+  if(leftOn == true && rightOn == true)
+  {
+    bigTurnDirection = 0;
+  }
+  //return what options for motion are available
+}
 
 void loop()
 {
