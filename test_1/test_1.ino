@@ -18,9 +18,12 @@
   Development environment specifics:
   Arduino 1.6.7
 ******************************************************************************/
-#define IR_sensitivity 1 //White detected below this value, black detected above thi value
+#define IR_sensitivity 2 //White detected below this value, black detected above thi value
 
 int bigTurnDirection = 2; //Specifies direction to turn if middle sensors cannot be used. 0 - go_straight; 1 - turns right; 2 - turns left;
+
+//delay long enought blackline re-detect the b
+#define shortDelay 75
 
 #define motorSpeedFast 250
 #define motorSpeedSlow 200
@@ -48,6 +51,7 @@ bool alternator = false; //Variable for checking left and right alternate state 
 
 int movementState = 1; //State of previous movement; 0 is straight; 1 is reverse; 2 is left; 3 is right;
 bool oppositeDirectionOnChecker = false;
+
 
 void setup()
 {
@@ -251,12 +255,13 @@ void whiteLineAlgorithm()
 
 void bigTurn()
 {
+  
   if(bigTurnDirection == 0)
   {        
     goStraight();
     IR_update();
   }
-  if(bigTurnDirection == 1)
+  else if(bigTurnDirection == 1)
   {
     while(IR_state[2] != true)
     {
@@ -278,7 +283,7 @@ void bigTurn()
       }
     }
   }
-  if(bigTurnDirection == 2)
+  else if(bigTurnDirection == 2)
   {
     while(IR_state[2] != true)
     {
@@ -308,17 +313,17 @@ void edgeSensorChecker() //saves instruction for the preffered direction to move
       if(IR_state[0]== true && IR_state[4] == false)
       {
         bigTurnDirection = 2;
-        Serial.println("Big turn direction - Left");
+        Serial.println("Big turn direction chaged- Left");
       }
       else if(IR_state[0] == false && IR_state[4] == true)
       {
         bigTurnDirection = 1;
-        Serial.println("Big turn direction - Right");
+        Serial.println("Big turn direction changed- Right");
       }
       else if(IR_state[0] == true && IR_state[4] == true)
       {
         bigTurnDirection = 0;    
-        Serial.println("Big turn direction - Straight");
+        Serial.println("Big turn direction changed - Straight");
       }
     }
     else
@@ -336,23 +341,7 @@ void movement_algo()
   // You could create completely seperate loop for separate states
   if (IR_state[2] == true) //if middle sensor is on
   {
-    oppositeDirectionOnChecker = 0;
-    if (IR_state[1] == true && IR_state[3] == true)
-    {
-      goStraight();
-    }
-    if (IR_state[1] == false && IR_state[3] == true)
-    {
-      goRight();
-    }
-    if (IR_state[1] == true && IR_state[3] == false)
-    {
-      goLeft();
-    }
-    if (IR_state[1] == false && IR_state[3] == false)
-    {
-      goStraight();
-    }
+    goStraight();
   }
   else
   {
@@ -368,43 +357,38 @@ void movement_algo()
     {
       goLeft();
     }
-    /*if(bigTurnDirection == 0)
+    else //goes straight for a bit to check if it can find the black line for some time and only goes to bigTurn() if unsucessful
     {
+      unsigned long start_time = millis();
+      int time_current = 0;
       goStraight();
-      IR_update();
-    }
-    if(bigTurnDirection == 1)
-    {
-      while(IR_state[1] != true)
+      while(time_current <= 150)
       {
-        goRight();
         IR_update();
-        for (int i = 0; i < 5; i++)
+        if(IR_state[1] == true || IR_state[2] == true || IR_state[3] == true)
         {
-          Serial.print(IR_state[i]);
+          break;
         }
-        Serial.println();       
+        time_current = millis()- start_time;
       }
-    }
-    if(bigTurnDirection == 2)
-    {
-      while(IR_state[3] != true)
-      {
-        goLeft();
-        IR_update();
-        for (int i = 0; i < 5; i++)
+      if(IR_state[1] == false && IR_state[2] == false && IR_state[3] == false)
         {
-          Serial.print(IR_state[i]);
+          bigTurn(); 
         }
-        Serial.println();  
-      }
-    }*/
-    else 
-    {
-      bigTurn(); 
     }
   }
 }
+
+/*void checkWhiteLineTime()//returns true if the system detects a white line for more than a specified time, else false
+{
+  if(IR_state[0] == false && IR_state[1] == false && IR_state[2] == false && IR_state[3] == false && IR_state[4] == false)
+  {
+    if(whiteLineTimeChecker == 0)
+    {
+      whiteLineTimeStart = millis();
+    }
+  }
+}*/
 
 void loop()
 {
