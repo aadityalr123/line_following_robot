@@ -267,20 +267,16 @@ void bigTurn()
     {
       goRight();
       IR_update();
-      for (int i = 0; i < 5; i++)
-      {
-        Serial.print(IR_state[i]);
-      }
-      Serial.println();    
     }
     while(IR_state[1] != 0)
     {
       goStraight();
       IR_update();
-      for (int i = 0; i < 5; i++)
-      {
-        Serial.print(IR_state[i]);
-      }
+    }
+    while(IR_state[2] != true)
+    {
+      goLeft();
+      IR_update();
     }
   }
   else if(bigTurnDirection == 2)
@@ -289,20 +285,16 @@ void bigTurn()
     {
       goLeft();
       IR_update();
-      for (int i = 0; i < 5; i++)
-      {
-        Serial.print(IR_state[i]);
-      }
-      Serial.println();      
     }
     while(IR_state[3] != 0)
     {
       goStraight();
       IR_update();
-      for (int i = 0; i < 5; i++)
-      {
-        Serial.print(IR_state[i]);
-      }
+    }
+    while(IR_state[2] != true)
+    {
+      goRight();
+      IR_update();
     }  
   }  
 }
@@ -375,7 +367,7 @@ void movement_algo()
       start_time = millis();
       time_current = 0;
       goReverse();
-            while(time_current <= 150)
+      while(time_current <= 200)
       {
         IR_update();
         if(IR_state[1] == true || IR_state[2] == true || IR_state[3] == true)
@@ -385,10 +377,10 @@ void movement_algo()
         time_current = millis()- start_time;
       }
       if(IR_state[1] == false && IR_state[2] == false && IR_state[3] == false)
-        {
-          scanSurroundings();
-          bigTurn(); //to handle accute angles when necessary
-        }
+      {
+        scanSurroundings();
+        bigTurn(); //to handle accute angles when necessary
+      }
     }
   }
 }
@@ -400,7 +392,7 @@ void scanSurroundings() //Returns directions available. Moves to the right and t
   //spin right, detect right
   unsigned long start_time = millis();
   int time_current = 0;
-  while(time_current <= 600)
+  while(time_current <= 450)
     {
       goRight();
       IR_update();
@@ -416,7 +408,7 @@ void scanSurroundings() //Returns directions available. Moves to the right and t
   //spin left, detect left
   start_time = millis();
   time_current = 0;
-  while(time_current <= 550)//Left motor rotates quite a bit more that the right on
+  while(time_current <= 600)//Left motor rotates quite a bit more that the right on
   {
     goLeft();
     IR_update();
@@ -430,7 +422,7 @@ void scanSurroundings() //Returns directions available. Moves to the right and t
   }
   start_time = millis();
   time_current = 0;
-  while(time_current <= 300)
+  while(time_current <= 450)
   {
     goRight();
     time_current = millis()- start_time;
